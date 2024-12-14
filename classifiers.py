@@ -291,7 +291,8 @@ def vanillaRF(X_train,y_train,X_test,y_test):
     GCV=GridSearchCV(clf,param_grid={'max_features':['sqrt', 'log2'],
                                      'n_estimators': [50, 100, 200],
                                     'max_depth': [10, 20, 30],
-                                    'min_samples_split': [2, 5, 10]},
+                                    'min_samples_split': [2, 5, 10],
+                                    'min_samples_leaf': [1, 2, 4]},
                      scoring='accuracy',cv=5)
     GCV.fit(X_train,y_train)
     max_feats=GCV.best_params_['max_features']
