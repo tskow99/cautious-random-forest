@@ -10,6 +10,7 @@ import warnings
 warnings.filterwarnings('ignore')
 from sklearn.experimental import enable_iterative_imputer
 from sklearn.impute import IterativeImputer
+from ucimlrepo import fetch_ucirepo 
 
 def german_credit_data():
     url = "https://archive.ics.uci.edu/ml/machine-learning-databases/statlog/german/german.data"
@@ -61,6 +62,22 @@ def heart_disease_data():
     kf=KFold(n_splits=10)
     X_train_calib, X_test, y_train_calib, y_test = train_test_split(X,
                                                       num,
+                                                      test_size=0.33,
+                                                      random_state=0)
+    X_train, X_calib, y_train, y_calib = train_test_split(X_train_calib,
+                                                          y_train_calib, 
+                                                          test_size=0.1, 
+                                                          random_state=0, 
+                                                          stratify=y_train_calib)
+    return X_train, X_calib,X_test, y_train, y_calib, y_test
+
+def breast_cancer_data():
+    breast_cancer_wisconsin_diagnostic = fetch_ucirepo(id=17) 
+    X = breast_cancer_wisconsin_diagnostic.data.features 
+    y = breast_cancer_wisconsin_diagnostic.data.targets 
+    y = y.Diagnosis == 'M'
+    X_train_calib, X_test, y_train_calib, y_test = train_test_split(X,
+                                                      y,
                                                       test_size=0.33,
                                                       random_state=0)
     X_train, X_calib, y_train, y_calib = train_test_split(X_train_calib,
