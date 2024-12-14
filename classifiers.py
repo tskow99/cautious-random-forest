@@ -286,3 +286,27 @@ class WCRF:
             
         return predictions, pred_intervals, p_intervals
 
+def vanillaRF(X_train,y_train,X_test,y_test):
+    clf=RF(random_state=0)
+    GCV=GridSearchCV(clf,param_grid={'max_features':['sqrt', 'log2'],
+                                     'n_estimators': [50, 100, 200],
+                                    'max_depth': [10, 20, 30],
+                                    'min_samples_split': [2, 5, 10]},
+                     scoring='accuracy',cv=5)
+    GCV.fit(X_train,y_train)
+    max_feats=GCV.best_params_['max_features']
+    n_est=GCV.best_params_['n_estimators']
+    max_dep=GCV.best_params_['max_depth']
+    mss=GCV.best_params_['min_samples_split']
+    
+    clf=RF(max_features=max_feats,min_samples_split=mss,max_depth=max_dep,n_estimators=n_est,random_state=0)
+    clf.fit(X_train,y_train)
+    score=clf.score(X_test,y_test)
+    cvscore=cross_val_score(clf,X_test,y_test,cv=10)
+    
+    preds=clf.predict(X_test)
+    confusion_matrix = metrics.confusion_matrix(y_test,preds)
+    cm_display=metrics.ConfusionMatrixDisplay(confusion_matrix=confusion_matrix,
+                                              display_labels = [0,1])
+    cm_display.plot()
+    return preds, score, cvscore
