@@ -86,3 +86,23 @@ def breast_cancer_data():
                                                           random_state=0, 
                                                           stratify=y_train_calib)
     return X_train, X_calib,X_test, y_train, y_calib, y_test
+
+def compas_data():
+    df = pd.read_csv('./data/compas/compas_data_combined_matches.csv')
+    columns_to_drop = ['FirstName', 'LastName', 'DateOfBirth', 'id', 'v_decile_score', 'DecileScore_Risk of Failure to Appear','race', 'DecileScore_Risk of Recidivism', 'DecileScore_Risk of Violence', 'RawScore_Risk of Failure to Appear', 'RawScore_Risk of Recidivism', 'RawScore_Risk of Violence', '_merge', 'sex', 'c_charge_desc']
+    rf_dataset = df.drop(columns=columns_to_drop)
+    ## Remove Nans
+    na_counts = rf_dataset.isna().sum()
+    na_columns = na_counts[na_counts > 0] 
+    nans = na_columns.to_dict()
+    columns_to_remove = []
+    for key in nans.keys():
+        columns_to_remove.append(key)
+    rf_dataset = rf_dataset.drop(columns=columns_to_remove)
+    labels = rf_dataset.two_year_recid
+    rf_dataset = rf_dataset.drop(columns=['two_year_recid', 'is_recid', 'score_text'])
+    
+    X_train_calib, X_test, y_train_calib, y_test = train_test_split(rf_dataset, labels, test_size=0.2, random_state=42)
+    
+    X_train, X_calib, y_train, y_calib = train_test_split(X_train_calib, y_train_calib, test_size=0.2, random_state=42)
+    return X_train, X_calib,X_test, y_train, y_calib, y_test
