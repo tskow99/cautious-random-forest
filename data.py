@@ -100,8 +100,8 @@ def compas_data():
         columns_to_remove.append(key)
     rf_dataset = rf_dataset.drop(columns=columns_to_remove)
     labels = rf_dataset.two_year_recid
-    rf_dataset = rf_dataset.drop(columns=['two_year_recid', 'is_recid', 'score_text'])
-    
+    rf_dataset = rf_dataset.drop(columns=['two_year_recid', 'is_recid'])
+
     X_train_calib, X_test, y_train_calib, y_test = train_test_split(rf_dataset, labels, test_size=0.2, random_state=42)
     
     X_train, X_calib, y_train, y_calib = train_test_split(X_train_calib, y_train_calib, test_size=0.2, random_state=42)
