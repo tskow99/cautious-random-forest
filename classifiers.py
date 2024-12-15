@@ -1,17 +1,20 @@
 from abc import ABC, abstractmethod
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier as RF
 from sklearn.metrics import accuracy_score, classification_report
 from sklearn.preprocessing import OneHotEncoder
 import numpy as np
 import matplotlib.pyplot as plt
 import bisect
 import numpy as np
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import MultiLabelBinarizer
 from scipy.special import expit
 from scipy.optimize import minimize
+from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import cross_val_score
+
+
 
 
 class CautiousClassifier(ABC):
@@ -42,7 +45,7 @@ class ConformalPredictor(CautiousClassifier):
         self.combination = combination
         self.data_name = data_name
         self.w = np.ones(n_trees) / n_trees
-        self.model = RandomForestClassifier(n_estimators=n_trees, max_depth=tree_max_depth, random_state=random_state)
+        self.model = RF(n_estimators=n_trees, max_depth=tree_max_depth, random_state=random_state)
 
     def fit(self, X_train, y_train, X_calib, y_calib):
         self.model.fit(X_train, y_train)
@@ -114,7 +117,7 @@ class WCRF:
         self.combination = combination
         self.data_name = data_name
         self.w = np.ones(n_trees)/n_trees
-        self.model = RandomForestClassifier(n_estimators=n_trees, max_depth=tree_max_depth, random_state=random_state)
+        self.model = RF(n_estimators=n_trees, max_depth=tree_max_depth, random_state=random_state)
         
         
     def fit(self, X, y):
@@ -286,28 +289,33 @@ class WCRF:
             
         return predictions, pred_intervals, p_intervals
 
-def vanillaRF(X_train,y_train,X_test,y_test):
-    clf=RF(random_state=0)
-    GCV=GridSearchCV(clf,param_grid={'max_features':['sqrt', 'log2'],
-                                     'n_estimators': [50, 100, 200],
-                                    'max_depth': [10, 20, 30],
-                                    'min_samples_split': [2, 5, 10],
-                                    'min_samples_leaf': [1, 2, 4]},
-                     scoring='accuracy',cv=5)
-    GCV.fit(X_train,y_train)
-    max_feats=GCV.best_params_['max_features']
-    n_est=GCV.best_params_['n_estimators']
-    max_dep=GCV.best_params_['max_depth']
-    mss=GCV.best_params_['min_samples_split']
+class vanillaRF:
+    def __init__(self, X, y):
+        self.data = X
+        self.labels = y
+
+    def gridSearch(self):
+        clf=RF(random_state=0)
+        param_grid = {
+        'n_estimators': [50, 100, 200], 
+        'max_depth': [None, 10, 20, 30],     
+        'max_features': ['sqrt', 'log2', None],
+        'min_samples_split': [2, 5, 10],
+        'min_samples_leaf': [1, 2, 4]
+    }
+        grid_search = GridSearchCV(estimator=clf, param_grid=param_grid, cv=5, scoring='accuracy', verbose=2)
+        grid_search.fit(self.data, self.labels)
+        return grid_search.best_params_
     
-    clf=RF(max_features=max_feats,min_samples_split=mss,max_depth=max_dep,n_estimators=n_est,random_state=0)
-    clf.fit(X_train,y_train)
-    score=clf.score(X_test,y_test)
-    cvscore=cross_val_score(clf,X_test,y_test,cv=10)
+    def fit(self, best_params):
+        self.model = RF(**best_params, random_state=0)
+        self.model.fit(self.data, self.labels)
+
+
+    def predict(self, X_test):
+        return self.model.predict(X_test)
     
-    preds=clf.predict(X_test)
-    confusion_matrix = metrics.confusion_matrix(y_test,preds)
-    cm_display=metrics.ConfusionMatrixDisplay(confusion_matrix=confusion_matrix,
-                                              display_labels = [0,1])
-    cm_display.plot()
-    return preds, score, cvscore
+    def predict_x_val(self, X_test,y_test,cv=10):
+        cvscore=cross_val_score(self.model,X_test,y_test,cv)
+        return cvscore 
+    
