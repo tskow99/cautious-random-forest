@@ -12,6 +12,19 @@ from sklearn.experimental import enable_iterative_imputer
 from sklearn.impute import IterativeImputer
 from ucimlrepo import fetch_ucirepo 
 
+
+def load_dataset(dataset_name):
+
+    if dataset_name == 'german_credit_data':
+        return german_credit_data()
+    elif dataset_name == 'compas_data':
+        return compas_data()
+    elif dataset_name == 'heart_disease_data':
+        return heart_disease_data()
+    elif dataset_name == 'breast_cancer_data':
+        return breast_cancer_data()
+    else:
+        raise ValueError(f"Dataset: {dataset_name} not found")
 def german_credit_data():
     url = "https://archive.ics.uci.edu/ml/machine-learning-databases/statlog/german/german.data"
     columns = [
@@ -38,10 +51,17 @@ def german_credit_data():
     X_train_calib, X_test, y_train_calib, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
 
     X_train, X_calib, y_train, y_calib = train_test_split(X_train_calib, y_train_calib, test_size=0.1, random_state=42, stratify=y_train_calib)
-    return X_train, X_calib,X_test, y_train, y_calib, y_test
+    return {
+        "train":X_train, 
+        "calib": X_calib,
+        "test": X_test,
+        "train_labels": y_train,
+        "calib_labels": y_calib,
+        "test_labels": y_test
+    }
 
 def heart_disease_data():
-    HD=pd.read_csv('heart_disease_uci.csv')
+    HD=pd.read_csv('./data/heart_disease_uci.csv')
     cols_to_drop=['id','dataset']
     HD_cleaned=HD.drop(columns=cols_to_drop)
     
@@ -69,8 +89,14 @@ def heart_disease_data():
                                                           test_size=0.1, 
                                                           random_state=0, 
                                                           stratify=y_train_calib)
-    return X_train, X_calib,X_test, y_train, y_calib, y_test
-
+    return {
+        "train":X_train, 
+        "calib": X_calib,
+        "test": X_test,
+        "train_labels": y_train,
+        "calib_labels": y_calib,
+        "test_labels": y_test
+    }
 def breast_cancer_data():
     breast_cancer_wisconsin_diagnostic = fetch_ucirepo(id=17) 
     X = breast_cancer_wisconsin_diagnostic.data.features 
@@ -85,8 +111,14 @@ def breast_cancer_data():
                                                           test_size=0.1, 
                                                           random_state=0, 
                                                           stratify=y_train_calib)
-    return X_train, X_calib,X_test, y_train, y_calib, y_test
-
+    return {
+        "train":X_train, 
+        "calib": X_calib,
+        "test": X_test,
+        "train_labels": y_train,
+        "calib_labels": y_calib,
+        "test_labels": y_test
+    }
 def compas_data():
     df = pd.read_csv('./data/compas/compas_data_combined_matches.csv')
     columns_to_drop = ['FirstName', 'LastName', 'DateOfBirth', 'id', 'v_decile_score', 'DecileScore_Risk of Failure to Appear','race', 'DecileScore_Risk of Recidivism', 'DecileScore_Risk of Violence', 'RawScore_Risk of Failure to Appear', 'RawScore_Risk of Recidivism', 'RawScore_Risk of Violence', '_merge', 'sex', 'c_charge_desc']
@@ -105,4 +137,11 @@ def compas_data():
     X_train_calib, X_test, y_train_calib, y_test = train_test_split(rf_dataset, labels, test_size=0.2, random_state=42)
     
     X_train, X_calib, y_train, y_calib = train_test_split(X_train_calib, y_train_calib, test_size=0.2, random_state=42)
-    return X_train, X_calib,X_test, y_train, y_calib, y_test
+    return {
+        "train":X_train, 
+        "calib": X_calib,
+        "test": X_test,
+        "train_labels": y_train,
+        "calib_labels": y_calib,
+        "test_labels": y_test
+    }

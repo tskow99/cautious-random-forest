@@ -1,12 +1,34 @@
 from sklearn import metrics
 import numpy as np
+from sklearn.metrics import accuracy_score
 
-def conformal_pred_eval(y_test, y_pred, model):
+
+
+def evaluate_model(model_name, X_test, y_test,model):
+    if model_name == 'ConformalPredictor':
+        return conformal_pred_eval(X_test, y_test,model)
+    elif model_name == 'WCRF':
+        return wcrf_eval(X_test, y_test,model)
+    elif model_name == 'vanillaRF':
+       return vanilla_rf_eval(X_test, y_test,model) 
+    else:
+        raise ValueError(f"Dataset: {model_name} not found")
+
+     
+
+def conformal_pred_eval(X_test, y_test,model):
         # TO DO IMPLEMENT PRECISE PRED
         # precise_predictions = model.predict(y_test)
         # precise_accuracy = sum(y_test==precise_predictions)/len(y_test)
         # precise_accuracy = round(precise_accuracy*100, 2)
-        imprecise_predictions = y_pred
+        y_pred = model.predict(X_test)
+        y_preds_transformed = [
+        -1 if p == (0, 1) else p[0] 
+        for p in y_pred
+        ]
+        y_preds_transformed = np.array(y_preds_transformed)
+
+        imprecise_predictions = y_preds_transformed
         indeterminate_instance = (imprecise_predictions == -1)
         determinate_instance = (imprecise_predictions != -1)
         
@@ -80,3 +102,6 @@ def wcrf_eval(X_test, y_test,model,  plot=False, show_confusion_matrix=False):
             'single_set_accuracy':single_set_accuracy, 
             'determinacy':determinacy, 
             'precise_accuracy':precise_accuracy}
+
+def vanilla_rf_eval(X_test, y_test,model):
+    return accuracy_score(y_test, model.predict(X_test))
