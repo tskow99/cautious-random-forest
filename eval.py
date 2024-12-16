@@ -2,19 +2,67 @@ from sklearn import metrics
 import numpy as np
 from sklearn.metrics import accuracy_score
 
+"""
+Project Evaluation Framework
 
+This program provides an interface for evaluating our models, specifically focusing on 
+cautious classifiers and their unique metrics. 
+
+**Model Evaluation**:
+   - Supports evaluation of multiple cautious classification models, including:
+     - `ConformalPredictor`
+     - `WCRF` (Weighted Conformal Random Forest)
+     - `NaiveCautiousClassifier`
+     - `RandomForest`
+
+ **Metrics**:
+   - **Determinacy**: Proportion of instances where the model provides a confident (determinate) prediction.
+   - **Abstention**: Proportion of instances where the model abstains from making a prediction.
+   - **Single-Set Accuracy**: Accuracy on the determinate subset of predictions.
+   - **u65 Score**: A custom metric that balances accuracy and determinacy.
+   - **Precise Accuracy**: Traditional accuracy metric without abstention for comparison.
+
+"""
 
 def evaluate_model(model_name, X_test, y_test,model):
     if model_name == 'ConformalPredictor':
         return conformal_pred_eval(X_test, y_test,model)
     elif model_name == 'WCRF':
         return wcrf_eval(X_test, y_test,model)
-    elif model_name == 'vanillaRF':
-       return vanilla_rf_eval(X_test, y_test,model) 
+    elif model_name == 'RandomForest':
+       return random_forest_eval(X_test, y_test,model) 
+    elif model_name == 'NaiveCautiousClassifier':
+        return naive_classifier_eval(X_test, y_test,model)
     else:
         raise ValueError(f"Dataset: {model_name} not found")
 
-     
+def naive_classifier_eval(X_test, y_test,model):
+    y_pred = model.predict(X_test)
+
+    precise_predictions = model.model.predict(X_test)
+    precise_accuracy = sum(y_test==precise_predictions)/len(y_test)
+    precise_accuracy = round(precise_accuracy*100, 2)
+
+    imprecise_predictions = y_pred
+    indeterminate_instance = (imprecise_predictions == -1)
+    determinate_instance = (imprecise_predictions != -1)
+    # calculate single-set length
+    single_set_length = len(y_test) - sum(indeterminate_instance)
+        
+    # calculate determinacy
+    determinacy = single_set_length/len(y_test)
+    determinacy = round(determinacy*100, 2)
+    
+    # calculate single-set accuracy
+    single_set_accuracy = sum(y_test[determinate_instance]==imprecise_predictions[determinate_instance])/single_set_length
+    single_set_accuracy = round(single_set_accuracy*100, 2)
+    
+    # claculate u65
+    u65_score = round(65 + (single_set_accuracy - 65)*determinacy/100, 2)
+    return {'u65_score':u65_score, 
+        'single_set_accuracy':single_set_accuracy, 
+        'determinacy':determinacy,
+        'abstention': 100-determinacy}
 
 def conformal_pred_eval(X_test, y_test,model):
         # TO DO IMPLEMENT PRECISE PRED
@@ -27,6 +75,9 @@ def conformal_pred_eval(X_test, y_test,model):
         for p in y_pred
         ]
         y_preds_transformed = np.array(y_preds_transformed)
+        precise_predictions = model.model.predict(X_test)
+        precise_accuracy = sum(y_test==precise_predictions)/len(y_test)
+        precise_accuracy = round(precise_accuracy*100, 2)
 
         imprecise_predictions = y_preds_transformed
         indeterminate_instance = (imprecise_predictions == -1)
@@ -47,7 +98,8 @@ def conformal_pred_eval(X_test, y_test,model):
         u65_score = round(65 + (single_set_accuracy - 65)*determinacy/100, 2)
         return {'u65_score':u65_score, 
             'single_set_accuracy':single_set_accuracy, 
-            'determinacy':determinacy}
+            'determinacy':determinacy,
+            'abstention': 100-determinacy}
 
 
 def wcrf_eval(X_test, y_test,model,  plot=False, show_confusion_matrix=False):
@@ -101,7 +153,9 @@ def wcrf_eval(X_test, y_test,model,  plot=False, show_confusion_matrix=False):
     return {'u65_score':u65_score, 
             'single_set_accuracy':single_set_accuracy, 
             'determinacy':determinacy, 
-            'precise_accuracy':precise_accuracy}
+            'precise_accuracy':precise_accuracy,
+            'abstention': 100-determinacy
+            }
 
-def vanilla_rf_eval(X_test, y_test,model):
+def random_forest_eval(X_test, y_test,model):
     return accuracy_score(y_test, model.predict(X_test))

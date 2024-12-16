@@ -14,7 +14,37 @@ from scipy.optimize import minimize
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import cross_val_score
 
+"""
+Cautious Classifiers
 
+The below classes implement a framework for cautious classification. The goal is to design classifiers that 
+can abstain and or are less likley to make decisions when there is high uncertainty. It includes multiple cautious 
+classification strategies. 
+
+Key Classes:
+1. CautiousClassifier (Abstract Base Class):
+   - Defines the structure for cautious classifiers.
+   - Enforces implementation of `fit` and `predict` methods in derived classes.
+
+2. NaiveCautiousClassifier:
+   - A baseline implementation using a Random Forest Classifier.
+   - Implements threshold-based abstention, where predictions are discarded if the confidence is below a user-defined threshold.
+   - Includes functionality for hyperparameter tuning using GridSearchCV.
+
+3. ConformalPredictor:
+   - A probabilistic classifier leveraging conformal prediction.
+   - Generates prediction sets with a predefined coverage guarantee, abstaining when confidence intervals overlap.
+   - Supports calibration with nonconformity scores for robust decision-making.
+
+4. WCRF (Weighted Conformal Random Forest):
+   - Extends Random Forest with region-specific predictions and weights.
+   - Combines probabilistic predictions using weighted intervals and abstains when predictions are ambiguous.
+   - Includes parameter tuning and optimization for improved performance.
+
+5. RandomForest:
+   - A simple wrapper around scikit-learn's RandomForestClassifier.
+   - Implements hyperparameter tuning, fitting, and cross-validation.
+"""
 
 
 class CautiousClassifier(ABC):
@@ -36,8 +66,45 @@ class CautiousClassifier(ABC):
         ''''''
         raise NotImplementedError()
    
-class ConformalPredictor(CautiousClassifier):
-    def __init__(self, n_trees=100, s=2, gamma=1, labda=1, tree_max_depth=None, combination=1, data_name=None, random_state=None):
+class NaiveCautiousClassifier(CautiousClassifier):
+    def __init__(self, X, y, threshold):
+        self.data = X
+        self.labels = y
+        self.threshold = threshold
+
+    def gridSearch(self):
+        clf=RF(random_state=0)
+        param_grid = {
+        'n_estimators': [50, 100, 200], 
+        'max_depth': [None, 10, 20, 30],     
+        'max_features': ['sqrt', 'log2', None],
+        'min_samples_split': [2, 5, 10],
+        'min_samples_leaf': [1, 2, 4]
+    }
+        grid_search = GridSearchCV(estimator=clf, param_grid=param_grid, cv=5, scoring='accuracy', verbose=2)
+        grid_search.fit(self.data, self.labels)
+        return grid_search.best_params_
+    
+    def fit(self, best_params):
+        self.model = RF(**best_params, random_state=0)
+        self.model.fit(self.data, self.labels)
+
+
+    def predict(self, X_test):
+        preds = self.model.predict_proba(X_test)  
+        max_probs = np.max(preds, axis=1)               
+        predicted_labels = np.argmax(preds, axis=1)
+        predicted_labels = np.where(max_probs >= self.threshold, predicted_labels, -1)
+
+        return predicted_labels
+    
+    def predict_x_val(self, X_test,y_test,cv=10):
+        cvscore=cross_val_score(self.model,X_test,y_test,cv)
+        return cvscore 
+    
+
+class ConformalPredictor(CautiousClassifier, ):
+    def __init__(self,n_trees=100, s=2, gamma=1, labda=1, tree_max_depth=None, combination=1, data_name=None, random_state=None):
         self.n_trees = n_trees
         self.s = s
         self.labda = labda
@@ -45,9 +112,22 @@ class ConformalPredictor(CautiousClassifier):
         self.combination = combination
         self.data_name = data_name
         self.w = np.ones(n_trees) / n_trees
-        self.model = RF(n_estimators=n_trees, max_depth=tree_max_depth, random_state=random_state)
+        # self.model = RF(best_params, random_state=random_state)
+    def gridSearch(self, X, y):
+        clf=RF(random_state=0)
+        param_grid = {
+        'n_estimators': [50, 100, 200], 
+        'max_depth': [None, 10, 20, 30],     
+        'max_features': ['sqrt', 'log2', None],
+        'min_samples_split': [2, 5, 10],
+        'min_samples_leaf': [1, 2, 4]
+    }
+        grid_search = GridSearchCV(estimator=clf, param_grid=param_grid, cv=5, scoring='accuracy', verbose=2)
+        grid_search.fit(X, y)
+        return grid_search.best_params_
 
-    def fit(self, X_train, y_train, X_calib, y_calib):
+    def fit(self,best_params, X_train, y_train, X_calib, y_calib):
+        self.model = RF(**best_params, random_state=0)
         self.model.fit(X_train, y_train)
 
         # Store class information
@@ -164,8 +244,7 @@ class WCRF:
         self.regions_pred_info = dict()
 
         return 
-        
-
+    
     def fit_w(self, X, y):
         alpha = 10
         beta = 2
@@ -288,8 +367,25 @@ class WCRF:
             p_intervals.append(pred_info[3])
             
         return predictions, pred_intervals, p_intervals
-
-class vanillaRF:
+    
+    def gridSearch(self, X_train, y_train, X_test, y_test):
+        opt=0;opt_s=0;opt_gam=0;opt_lam=0
+        for i in range(1,10):
+            for j in range(1,10):
+                for k in range(1,10):
+                    self.s = i
+                    self.gamma = j
+                    self.labda = k
+                    self.fit(X_train,y_train)
+                    self.fit_w(X_train,y_train)
+                    preds=self.predict(X_test)[0]
+                    if np.mean(preds==y_test)>opt:
+                        opt_s=i; opt_gam=j; opt_lam=k
+                        opt=np.mean(preds==y_test)
+        self.s = opt_s
+        self.gamma = opt_gam
+        self.labda = opt_lam
+class RandomForest:
     def __init__(self, X, y):
         self.data = X
         self.labels = y

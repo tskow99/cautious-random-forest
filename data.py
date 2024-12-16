@@ -12,6 +12,18 @@ from sklearn.experimental import enable_iterative_imputer
 from sklearn.impute import IterativeImputer
 from ucimlrepo import fetch_ucirepo 
 
+"""
+Dataset Loader
+
+This program provides an interface for loading and preprocessing various datasets. The datasets are preprocessed to be compatible with classification models and split into 
+training, calibration, and testing subsets.
+
+**Dataset Support**:
+   - `german_credit_data`: German Credit Dataset from UCI ML repository.
+   - `compas_data`: COMPAS dataset for recidivism prediction.
+   - `heart_disease_data`: Heart Disease dataset from UCI.
+   - `breast_cancer_data`: Breast Cancer Wisconsin Diagnostic dataset from UCI. 
+"""
 
 def load_dataset(dataset_name):
 
@@ -137,7 +149,6 @@ def compas_data():
     X_train_calib, X_test, y_train_calib, y_test = train_test_split(rf_dataset, labels, test_size=0.2, random_state=42)
     
     X_train, X_calib, y_train, y_calib = train_test_split(X_train_calib, y_train_calib, test_size=0.2, random_state=42)
-    print(X_train.columns)
     return {
         "train":X_train, 
         "calib": X_calib,
