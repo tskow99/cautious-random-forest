@@ -37,6 +37,12 @@ def evaluate_model(model_name, X_test, y_test,model):
         raise ValueError(f"Dataset: {model_name} not found")
 
 def naive_classifier_eval(X_test, y_test,model):
+    """
+    This method is implemented based on ideas and code from the below source. 
+    Reference:
+    https://github.com/Haifei-ZHANG/cf_for_wcrf/blob/main/wcrf.py
+    https://dmip.webs.upv.es/ROCAI2004/papers/04-ROCAI2004-Ferri-HdezOrallo.pdf
+    """
     y_pred = model.predict(X_test)
 
     precise_predictions = model.model.predict(X_test)
@@ -65,6 +71,12 @@ def naive_classifier_eval(X_test, y_test,model):
         'abstention': 100-determinacy}
 
 def conformal_pred_eval(X_test, y_test,model):
+        """
+        This method is implemented based on ideas and code from the below source. 
+        Reference:
+        https://github.com/Haifei-ZHANG/cf_for_wcrf/blob/main/wcrf.py
+        https://dmip.webs.upv.es/ROCAI2004/papers/04-ROCAI2004-Ferri-HdezOrallo.pdf
+        """
         # TO DO IMPLEMENT PRECISE PRED
         # precise_predictions = model.predict(y_test)
         # precise_accuracy = sum(y_test==precise_predictions)/len(y_test)
@@ -103,6 +115,12 @@ def conformal_pred_eval(X_test, y_test,model):
 
 
 def wcrf_eval(X_test, y_test,model,  plot=False, show_confusion_matrix=False):
+    """
+    This method is implemented based on ideas and code from the below source. 
+    Reference:
+    https://github.com/Haifei-ZHANG/cf_for_wcrf/blob/main/wcrf.py
+    https://dmip.webs.upv.es/ROCAI2004/papers/04-ROCAI2004-Ferri-HdezOrallo.pdf
+    """
         # get both imprecise and precise predictions 
     imprecise_predictions ,pred_intervals, p_intervals = model.predict(X_test, y_test)
     precise_predictions = np.zeros(len(y_test))

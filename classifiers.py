@@ -48,7 +48,6 @@ Key Classes:
 
 
 class CautiousClassifier(ABC):
-
     def __init__(
         self,
         model=None,
@@ -67,6 +66,11 @@ class CautiousClassifier(ABC):
         raise NotImplementedError()
    
 class NaiveCautiousClassifier(CautiousClassifier):
+    """
+    This class is implemented based on ideas and code from the below source. 
+    Reference:
+    https://dmip.webs.upv.es/ROCAI2004/papers/04-ROCAI2004-Ferri-HdezOrallo.pdf
+    """
     def __init__(self, X, y, threshold):
         self.data = X
         self.labels = y
@@ -104,6 +108,12 @@ class NaiveCautiousClassifier(CautiousClassifier):
     
 
 class ConformalPredictor(CautiousClassifier, ):
+    """
+    This class is implemented based on ideas and code from the below source. 
+    Reference:
+    https://blog.dataiku.com/measuring-models-uncertainty-conformal-prediction
+    """
+
     def __init__(self,n_trees=100, s=2, gamma=1, labda=1, tree_max_depth=None, combination=1, data_name=None, random_state=None):
         self.n_trees = n_trees
         self.s = s
@@ -188,6 +198,11 @@ class ConformalPredictor(CautiousClassifier, ):
         return pred
     
 class WCRF:
+    """
+    This class is from the below source. 
+    Reference:
+    https://github.com/Haifei-ZHANG/cf_for_wcrf/blob/main/wcrf.py
+    """
     def __init__(self, n_trees=100, s=2, gamma=1, labda=1, tree_max_depth=None, combination=1, data_name=None, random_state=None):
         # build a random forest using sklearn RandomForestClassifier
         self.n_trees = n_trees
