@@ -121,7 +121,7 @@ def breast_cancer_data():
     }
 def compas_data():
     df = pd.read_csv('./data/compas/compas_data_combined_matches.csv')
-    columns_to_drop = ['FirstName', 'LastName', 'DateOfBirth', 'id', 'v_decile_score', 'DecileScore_Risk of Failure to Appear','race', 'DecileScore_Risk of Recidivism', 'DecileScore_Risk of Violence', 'RawScore_Risk of Failure to Appear', 'RawScore_Risk of Recidivism', 'RawScore_Risk of Violence', '_merge', 'sex', 'c_charge_desc']
+    columns_to_drop = ['FirstName', 'LastName', 'DateOfBirth', 'id', 'v_decile_score', 'DecileScore_Risk of Failure to Appear','race', 'DecileScore_Risk of Recidivism', 'DecileScore_Risk of Violence', 'RawScore_Risk of Failure to Appear', 'RawScore_Risk of Recidivism', 'RawScore_Risk of Violence', '_merge', 'sex', 'score_text', 'c_charge_desc']
     rf_dataset = df.drop(columns=columns_to_drop)
     ## Remove Nans
     na_counts = rf_dataset.isna().sum()
@@ -137,6 +137,7 @@ def compas_data():
     X_train_calib, X_test, y_train_calib, y_test = train_test_split(rf_dataset, labels, test_size=0.2, random_state=42)
     
     X_train, X_calib, y_train, y_calib = train_test_split(X_train_calib, y_train_calib, test_size=0.2, random_state=42)
+    print(X_train.columns)
     return {
         "train":X_train, 
         "calib": X_calib,
