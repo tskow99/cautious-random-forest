@@ -1,6 +1,10 @@
 # Cautious-random-forest
 ## EN.675 Final Project 
-The code found in this repository was developed in fufillment of EN.675 Final Project assignment, completed by @tskow99, @davfeldm17 and @jehuddleston. 
+
+This repository explores methods for implementing cautiousness in Random Forest classifiers for binary classification tasks. We investigate various algorithms that account for uncertainty during decision-making and evaluate their effectiveness across multiple datasets. A summary of our findings and analysis is provided in the accompanying paper available in this repository.
+
+
+This project was developed in fufillment of EN.675 Final Project assignment, completed by @tskow99, @davfeldm17 and @jehuddleston. 
 
 # Getting started
 Clone the repository
