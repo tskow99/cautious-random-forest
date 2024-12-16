@@ -29,3 +29,21 @@ We use the following datasets:
 - Heart Disease dataset from https://archive.ics.uci.edu/dataset/45/heart+disease
 - Breast Cancer Wisconsin (Diagnostic) from https://archive.ics.uci.edu/dataset/17/breast+cancer+wisconsin+diagnostic
 - Statlog (German Credit Data) from https://archive.ics.uci.edu/dataset/144/statlog+german+credit+data
+
+## Sources
+
+Our methods and code is adapated from the following previouse work: 
+
+- Haifei Zhang, Benjamin Quost, Marie-Hélène Masson,
+Cautious weighted random forests,
+Expert Systems with Applications,
+Volume 213, Part A,
+2023,
+118883,
+ISSN 0957-4174,
+https://doi.org/10.1016/j.eswa.2022.118883.
+(https://www.sciencedirect.com/science/article/pii/S0957417422019017)
+Keywords: Cautious classification; Imprecise classification; Imprecise dirichlet model; Belief functions
+
+- Ferri, C., Hernández-Orallo, J., & Modroiu, R. (2004). Cautious Classifiers. Workshop on ROC Analysis in Artificial Intelligence (ROCAI 2004), 27-36. https://dmip.webs.upv.es/ROCAI2004/papers/04-ROCAI2004-Ferri-HdezOrallo.pdf
+
