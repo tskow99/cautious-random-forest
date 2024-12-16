@@ -1,0 +1,22 @@
+{
+    "german_credit_data": {
+        "labda": 3,
+        "gamma": 9,
+        "s": 1
+    },
+    "heart_disease_data": {
+        "labda": 6,
+        "gamma": 5,
+        "s": 1
+    },
+    "breast_cancer_data": {
+        "labda": 6,
+        "gamma": 5,
+        "s": 1
+    },
+    "compas_data": {
+        "labda": 7,
+        "gamma": 3,
+        "s": 1
+    }
+}
