@@ -442,6 +442,7 @@ class FuzzyRandomForest(BaseFuzzyRDF):
                  max_depth=3, min_samples_split=2, min_impurity_split=1e-7, max_features=None,
                  multi_process_options=None,fdt_class=FuzzyCARTClassifier):
         self.fdt_class = fdt_class
+        self.best_options = {}
         super().__init__(disable_fuzzy=disable_fuzzy,
                          fuzzification_options=fuzzification_options,
                          criterion_func=criterion_func,
@@ -487,7 +488,6 @@ class FuzzyRandomForest(BaseFuzzyRDF):
 
     def gridSearch(self,dataset_name,X_train, y_train, X_test, y_test):
         fname = 'frf_param_config.json'
-        
         opt = 0
         n_estimators = [50,100,200]
         depths = [1,10,20,30]
@@ -495,6 +495,7 @@ class FuzzyRandomForest(BaseFuzzyRDF):
         min_samples_split = [2, 5, 10]
         impurity_splits = [1e-7,1e-6,1e-5]
         classes = [FuzzyCARTClassifier]
+        fuzz_options = [5]
         opt_cl = None
         opt_est = 0
         opt_depth = 0
@@ -541,7 +542,14 @@ class FuzzyRandomForest(BaseFuzzyRDF):
             opts['fdt_class'] = 'ID3'
         else:
             opts['fdt_class'] = 'C45'
-        with open(fname,'w+') as f:
+        self.best_options[dataset_name] = opts
+        print('Writing to file')
+        curr = {}
+        with open(fname,'r+') as f:
             curr = json.load(f)
-            curr[dataset_name] = opts
+        curr[dataset_name] = opts
+        with open(fname, 'w+') as f:
             json.dump(curr,f)
+        print('Written')
+
+   
