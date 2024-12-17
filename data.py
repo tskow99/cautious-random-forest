@@ -132,9 +132,9 @@ def breast_cancer_data():
         "test_labels": y_test
     }
 def compas_data():
-    df = pd.read_csv('./data/compas_data_combined_matches.csv')
+    df = pd.read_csv('./data/compas/compas_data_combined_matches.csv')
     # columns_to_drop = ['FirstName', 'LastName', 'DateOfBirth', 'id', 'v_decile_score', 'DecileScore_Risk of Failure to Appear','race', 'DecileScore_Risk of Recidivism', 'DecileScore_Risk of Violence', 'RawScore_Risk of Failure to Appear', 'RawScore_Risk of Recidivism', 'RawScore_Risk of Violence', '_merge', 'sex', 'score_text', 'c_charge_desc']
-    columns_to_drop = ['FirstName', 'LastName', 'DateOfBirth', 'id', 'v_decile_score', 'DecileScore_Risk of Failure to Appear','race', 'DecileScore_Risk of Recidivism', 'DecileScore_Risk of Violence', 'RawScore_Risk of Failure to Appear', 'RawScore_Risk of Recidivism', 'RawScore_Risk of Violence', '_merge', 'sex', 'c_charge_desc']
+    columns_to_drop = ['FirstName', 'LastName', 'DateOfBirth', 'id', 'v_decile_score', 'DecileScore_Risk of Failure to Appear','race', 'DecileScore_Risk of Recidivism', 'DecileScore_Risk of Violence', 'RawScore_Risk of Failure to Appear', 'RawScore_Risk of Recidivism', 'RawScore_Risk of Violence', '_merge', 'sex', 'c_charge_desc', 'score_text']
     rf_dataset = df.drop(columns=columns_to_drop)
     ## Remove Nans
     na_counts = rf_dataset.isna().sum()
