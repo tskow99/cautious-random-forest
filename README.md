@@ -51,3 +51,5 @@ Keywords: Cautious classification; Imprecise classification; Imprecise dirichlet
 
 - Ferri, C., Hernández-Orallo, J., & Modroiu, R. (2004). Cautious Classifiers. Workshop on ROC Analysis in Artificial Intelligence (ROCAI 2004), 27-36. https://dmip.webs.upv.es/ROCAI2004/papers/04-ROCAI2004-Ferri-HdezOrallo.pdf
 
+- Liu, Z., Liu, A., Zhang, G., Lu, J. (2022). An Empirical Study of Fuzzy Decision Tree for Gradient Boosting Ensemble. In: Long, G., Yu, X., Wang, S. (eds) AI 2021: Advances in Artificial Intelligence. AI 2022. Lecture Notes in Computer Science(), vol 13151. Springer, Cham. https://doi.org/10.1007/978-3-030-97546-3_58
+

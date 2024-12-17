@@ -1,0 +1,10 @@
+pandas
+scikit-learn
+numpy
+matplotlib
+scipy
+seaborn
+adjustText
+statsmodels
+ISLP
+ucimlrepo

@@ -14,9 +14,10 @@ from scipy.optimize import minimize
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import cross_val_score
 from fuzzytrees.frdf import BaseFuzzyRDF
-from fuzzytrees.fdts import FuzzyCARTClassifier
+from fuzzytrees.fdts import FuzzyCARTClassifier,FuzzyID3Classifier, FuzzyC45Classifier
 from fuzzytrees.util_tree_criterion_funcs import majority_vote
 from fuzzytrees.fdt_base import FuzzyDecisionTreeWrapper
+import json
 
 """
 Cautious Classifiers
@@ -439,7 +440,8 @@ class RandomForest:
 class FuzzyRandomForest(BaseFuzzyRDF):
     def __init__(self, disable_fuzzy, fuzzification_options, criterion_func, n_estimators=100,
                  max_depth=3, min_samples_split=2, min_impurity_split=1e-7, max_features=None,
-                 multi_process_options=None):
+                 multi_process_options=None,fdt_class=FuzzyCARTClassifier):
+        self.fdt_class = fdt_class
         super().__init__(disable_fuzzy=disable_fuzzy,
                          fuzzification_options=fuzzification_options,
                          criterion_func=criterion_func,
@@ -451,18 +453,22 @@ class FuzzyRandomForest(BaseFuzzyRDF):
                          multi_process_options=multi_process_options)
 
         # Initialise the forest.
-        for _ in range(self.n_estimators):
-            estimator = FuzzyDecisionTreeWrapper(fdt_class=FuzzyCARTClassifier,
-                                                 disable_fuzzy=disable_fuzzy,
-                                                 fuzzification_options=fuzzification_options,
-                                                 criterion_func=criterion_func,
-                                                 max_depth=max_depth,
-                                                 min_samples_split=min_samples_split,
-                                                 min_impurity_split=min_impurity_split)
-            self._estimators.append(estimator)
+        self.build_estimators()
 
         # Specify to get the final classification result by majority voting method.
         self._res_func = majority_vote
+    
+    def build_estimators(self):
+        self._estimators = []
+        for _ in range(self.n_estimators):
+            estimator = FuzzyDecisionTreeWrapper(fdt_class=self.fdt_class,
+                                                 disable_fuzzy=self.disable_fuzzy,
+                                                 fuzzification_options=self.fuzzification_options,
+                                                 criterion_func=self.criterion_func,
+                                                 max_depth=self.max_depth,
+                                                 min_samples_split=self.min_samples_split,
+                                                 min_impurity_split=self.min_impurity_split)
+            self._estimators.append(estimator)
 
 
     def fit(self,X_train, y_train):
@@ -473,3 +479,69 @@ class FuzzyRandomForest(BaseFuzzyRDF):
             y_train = y_train.to_numpy()
         
         super().fit(X_train,y_train)
+
+    def predict(self,X_test):
+        if isinstance(X_test, pd.DataFrame):
+            X_test = X_test.to_numpy()
+        return np.array(super().predict(X_test))
+
+    def gridSearch(self,dataset_name,X_train, y_train, X_test, y_test):
+        fname = 'frf_param_config.json'
+        
+        opt = 0
+        n_estimators = [50,100,200]
+        depths = [1,10,20,30]
+        features = ['sqrt', 'log2', None]
+        min_samples_split = [2, 5, 10]
+        impurity_splits = [1e-7,1e-6,1e-5]
+        classes = [FuzzyCARTClassifier]
+        opt_cl = None
+        opt_est = 0
+        opt_depth = 0
+        opt_mss = 0
+        opt_mis = 0
+        
+        for est in n_estimators:
+            self.n_estimators = est
+            for cl in classes:
+                self.fdt_class = cl
+                for depth in depths:
+                    self.max_depth = depth
+                    for split in min_samples_split:
+                        self.min_samples_split = split
+                        for imp in impurity_splits:
+                            self.min_impurity_split = imp
+                            self._estimators = []
+                            self.build_estimators()
+                            self.fit(X_train,y_train)
+                            preds=self.predict(X_test)
+                            if np.mean(preds==y_test)>opt:
+                                    opt_cl = cl
+                                    opt_est = est
+                                    opt_depth = depth
+                                    opt_mss = split
+                                    opt_mis = imp
+                                    opt = np.mean(preds == y_test)
+
+        self.fdt_class = opt_cl
+        self.n_estimators = opt_est
+        self.max_depth=opt_depth
+        self.min_samples_split = opt_mss
+        self.min_impurity_split = opt_mis
+        self.build_estimators()
+
+        opts = {}
+        opts['n_estimators'] = opt_est
+        opts['max_depth'] = opt_depth
+        opts['min_samples_split'] = opt_mss
+        opts['min_impurity_split'] = opt_mis
+        if opt_cl == FuzzyCARTClassifier:
+            opts['fdt_class'] = 'CART'
+        elif opt_cl == FuzzyID3Classifier:
+            opts['fdt_class'] = 'ID3'
+        else:
+            opts['fdt_class'] = 'C45'
+        with open(fname,'w+') as f:
+            curr = json.load(f)
+            curr[dataset_name] = opts
+            json.dump(curr,f)
