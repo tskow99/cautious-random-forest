@@ -1,6 +1,7 @@
 from sklearn import metrics
 import numpy as np
 from sklearn.metrics import accuracy_score
+import pandas as pd
 
 """
 Project Evaluation Framework
@@ -33,6 +34,8 @@ def evaluate_model(model_name, X_test, y_test,model):
        return random_forest_eval(X_test, y_test,model) 
     elif model_name == 'NaiveCautiousClassifier':
         return naive_classifier_eval(X_test, y_test,model)
+    elif model_name == 'FuzzyRandomForest':
+        return fuzzy_random_forest_eval(X_test, y_test, model)
     else:
         raise ValueError(f"Dataset: {model_name} not found")
 
@@ -177,3 +180,11 @@ def wcrf_eval(X_test, y_test,model,  plot=False, show_confusion_matrix=False):
 
 def random_forest_eval(X_test, y_test,model):
     return accuracy_score(y_test, model.predict(X_test))
+
+def fuzzy_random_forest_eval(X_test, y_test, model):
+    if isinstance(X_test, pd.DataFrame):
+        X_test = X_test.to_numpy()
+    if isinstance(y_test, pd.Series):
+        y_test = y_test.to_numpy()
+    y_pred = model.predict(X_test)
+    return accuracy_score(y_test, y_pred)

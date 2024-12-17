@@ -13,6 +13,10 @@ from scipy.special import expit
 from scipy.optimize import minimize
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import cross_val_score
+from fuzzytrees.frdf import BaseFuzzyRDF
+from fuzzytrees.fdts import FuzzyCARTClassifier
+from fuzzytrees.util_tree_criterion_funcs import majority_vote
+from fuzzytrees.fdt_base import FuzzyDecisionTreeWrapper
 
 """
 Cautious Classifiers
@@ -400,6 +404,7 @@ class WCRF:
         self.s = opt_s
         self.gamma = opt_gam
         self.labda = opt_lam
+
 class RandomForest:
     def __init__(self, X, y):
         self.data = X
@@ -429,4 +434,42 @@ class RandomForest:
     def predict_x_val(self, X_test,y_test,cv=10):
         cvscore=cross_val_score(self.model,X_test,y_test,cv)
         return cvscore 
-    
+
+
+class FuzzyRandomForest(BaseFuzzyRDF):
+    def __init__(self, disable_fuzzy, fuzzification_options, criterion_func, n_estimators=100,
+                 max_depth=3, min_samples_split=2, min_impurity_split=1e-7, max_features=None,
+                 multi_process_options=None):
+        super().__init__(disable_fuzzy=disable_fuzzy,
+                         fuzzification_options=fuzzification_options,
+                         criterion_func=criterion_func,
+                         n_estimators=n_estimators,
+                         max_depth=max_depth,
+                         min_samples_split=min_samples_split,
+                         min_impurity_split=min_impurity_split,
+                         max_features=max_features,
+                         multi_process_options=multi_process_options)
+
+        # Initialise the forest.
+        for _ in range(self.n_estimators):
+            estimator = FuzzyDecisionTreeWrapper(fdt_class=FuzzyCARTClassifier,
+                                                 disable_fuzzy=disable_fuzzy,
+                                                 fuzzification_options=fuzzification_options,
+                                                 criterion_func=criterion_func,
+                                                 max_depth=max_depth,
+                                                 min_samples_split=min_samples_split,
+                                                 min_impurity_split=min_impurity_split)
+            self._estimators.append(estimator)
+
+        # Specify to get the final classification result by majority voting method.
+        self._res_func = majority_vote
+
+
+    def fit(self,X_train, y_train):
+        X_train = X_train.to_numpy()
+        if isinstance(X_train, pd.DataFrame):
+            X_train = X_train.to_numpy()
+        if isinstance(y_train, pd.Series):
+            y_train = y_train.to_numpy()
+        
+        super().fit(X_train,y_train)
