@@ -25,6 +25,8 @@ To validate the results from our report, run `results.ipynb`. The notebook will 
 
 Our classifier definitions are found in `classifiers.py`. `eval.py` contains the evaluation metrics specific to each classifier and `data.py` contains the data loaders for each dataset. 
 
+For our missing data analysis, run the two missing notebooks in the missing-data-analysis folder, which gives regression outputs for each missing data model we fit.
+
 ## Data
 
 We use the following datasets:
