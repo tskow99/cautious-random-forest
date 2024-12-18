@@ -71,6 +71,7 @@ def naive_classifier_eval(X_test, y_test,model):
     return {'u65_score':u65_score, 
         'single_set_accuracy':single_set_accuracy, 
         'determinacy':determinacy,
+        'precise_accuracy':precise_accuracy,
         'abstention': 100-determinacy}
 
 def conformal_pred_eval(X_test, y_test,model):
@@ -86,7 +87,7 @@ def conformal_pred_eval(X_test, y_test,model):
         # precise_accuracy = round(precise_accuracy*100, 2)
         y_pred = model.predict(X_test)
         y_preds_transformed = [
-        -1 if p == (0, 1) else p[0] 
+        -1 if (p == (0, 1) or p == ()) else p[0] 
         for p in y_pred
         ]
         y_preds_transformed = np.array(y_preds_transformed)
@@ -114,6 +115,7 @@ def conformal_pred_eval(X_test, y_test,model):
         return {'u65_score':u65_score, 
             'single_set_accuracy':single_set_accuracy, 
             'determinacy':determinacy,
+            'precise_accuracy':precise_accuracy,
             'abstention': 100-determinacy}
 
 
@@ -204,6 +206,7 @@ def random_forest_eval(X_test, y_test,model):
     return {'u65_score':u65_score, 
         'single_set_accuracy':single_set_accuracy, 
         'determinacy':determinacy,
+        'precise_accuracy':precise_accuracy,
         'abstention': 100-determinacy}
 
 def fuzzy_random_forest_eval(X_test, y_test, model):
@@ -231,4 +234,5 @@ def fuzzy_random_forest_eval(X_test, y_test, model):
     return {'u65_score':u65_score, 
         'single_set_accuracy':single_set_accuracy, 
         'determinacy':determinacy,
+        'precise_accuracy':precise_accuracy,
         'abstention': 100-determinacy}
