@@ -21,7 +21,7 @@ Install dependencies
 
 ## Code Layout
 
-To validate the results from our report, run `results.ipynb`. The notebook will fit each of our classifiers to each of our datasets and run evaluation on all classifiers. 
+To validate the results from our report, run `results.ipynb`. The notebook will fit each of our classifiers to each of our datasets and run evaluation on all classifiers. Note that one section, the first cell under `Fit Models` will take a few hours to run but is not necessary to replicate our results.
 
 Our classifier definitions are found in `classifiers.py`. `eval.py` contains the evaluation metrics specific to each classifier and `data.py` contains the data loaders for each dataset. 
 
@@ -33,6 +33,9 @@ We use the following datasets:
 - Heart Disease dataset from https://archive.ics.uci.edu/dataset/45/heart+disease
 - Breast Cancer Wisconsin (Diagnostic) from https://archive.ics.uci.edu/dataset/17/breast+cancer+wisconsin+diagnostic
 - Statlog (German Credit Data) from https://archive.ics.uci.edu/dataset/144/statlog+german+credit+data
+
+`data.py` handles loading each set and any preprocessing that needs to happen. It exposes the method `load_dataset`, which takes in the name of a dataset and returns the processed data. 
+
 
 ## Sources
 
@@ -52,4 +55,6 @@ Keywords: Cautious classification; Imprecise classification; Imprecise dirichlet
 - Ferri, C., Hernández-Orallo, J., & Modroiu, R. (2004). Cautious Classifiers. Workshop on ROC Analysis in Artificial Intelligence (ROCAI 2004), 27-36. https://dmip.webs.upv.es/ROCAI2004/papers/04-ROCAI2004-Ferri-HdezOrallo.pdf
 
 - Liu, Z., Liu, A., Zhang, G., Lu, J. (2022). An Empirical Study of Fuzzy Decision Tree for Gradient Boosting Ensemble. In: Long, G., Yu, X., Wang, S. (eds) AI 2021: Advances in Artificial Intelligence. AI 2022. Lecture Notes in Computer Science(), vol 13151. Springer, Cham. https://doi.org/10.1007/978-3-030-97546-3_58
+
+- Dreyfus-Schmidt, Leo.  Measuring Models' Uncertainty: Conformal Prediction. https://blog.dataiku.com/measuring-models-uncertainty-conformal-prediction
 

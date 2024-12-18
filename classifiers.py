@@ -543,13 +543,12 @@ class FuzzyRandomForest(BaseFuzzyRDF):
         else:
             opts['fdt_class'] = 'C45'
         self.best_options[dataset_name] = opts
-        print('Writing to file')
         curr = {}
         with open(fname,'r+') as f:
             curr = json.load(f)
         curr[dataset_name] = opts
         with open(fname, 'w+') as f:
             json.dump(curr,f)
-        print('Written')
+       
 
    
