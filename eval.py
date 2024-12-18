@@ -34,6 +34,8 @@ def evaluate_model(model_name, X_test, y_test,model):
        return random_forest_eval(X_test, y_test,model) 
     elif model_name == 'NaiveCautiousClassifier':
         return naive_classifier_eval(X_test, y_test,model)
+    elif model_name == 'ClassSpecificThresholdsCautiousClassifier':
+        return naive_classifier_eval(X_test, y_test,model)
     elif model_name == 'FuzzyRandomForest':
         return fuzzy_random_forest_eval(X_test, y_test, model)
     else:

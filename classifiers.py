@@ -4,6 +4,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier as RF
 from sklearn.metrics import accuracy_score, classification_report
 from sklearn.preprocessing import OneHotEncoder
+from sklearn.metrics import accuracy_score
 import numpy as np
 import matplotlib.pyplot as plt
 import bisect
@@ -111,6 +112,165 @@ class NaiveCautiousClassifier(CautiousClassifier):
         cvscore=cross_val_score(self.model,X_test,y_test,cv)
         return cvscore 
     
+## NOT WORKING SO COMMENTING OUT
+# class CostSensetiveCautiousClassifier(CautiousClassifier):
+#     """
+#     This class is implemented based on ideas and code from the below source. 
+#     Reference:
+#     https://dmip.webs.upv.es/ROCAI2004/papers/04-ROCAI2004-Ferri-HdezOrallo.pdf
+#     """
+#     def __init__(self, X, y, costs):
+#         self.data = X
+#         self.labels = y
+#         self.costs = costs
+
+#     def gridSearch(self):
+#         clf=RF(random_state=0)
+#         param_grid = {
+#         'n_estimators': [50, 100, 200], 
+#         'max_depth': [None, 10, 20, 30],     
+#         'max_features': ['sqrt', 'log2', None],
+#         'min_samples_split': [2, 5, 10],
+#         'min_samples_leaf': [1, 2, 4]
+#     }
+#         grid_search = GridSearchCV(estimator=clf, param_grid=param_grid, cv=5, scoring='accuracy', verbose=2)
+#         grid_search.fit(self.data, self.labels)
+#         return grid_search.best_params_
+    
+#     def fit(self, best_params):
+#         self.model = RF(**best_params, random_state=0)
+#         self.model.fit(self.data, self.labels)
+
+#     def get_cost(self, probs, y_calib, thresholds):
+#         for i in range(len(probs)):
+#             prob = probs[i]
+#             above_thresh = prob >= thresholds
+
+#             if not np.any(above_thresh):
+#                 total_cost += self.cost['abstention']
+#             else:
+#                 max_prob = np.max(prob, axis=1)
+#                 class_cost = 
+
+#     def fit_cost_sensetive_threshold(self, X_calib, y_calib, search_grid=np.linspace(0.5, 0.99, 10)):
+
+#         probs = self.model.predict_proba(X_calib)
+#         thresholds = np.full(2, 0.5)
+#         for label in range(2):
+#             best = thresholds[label]
+#             min_cost = self.get_cost(probs, y_calib, thresholds)
+#             for thresh in search_grid:
+#                 test= thresholds.copy()
+#                 test[label] = thresh
+#                 cost = self.get_cost(probs, y_calib, thresholds)
+#                 if cost < min_cost:
+#                     min_cost = cost
+#                     best = thresh
+#             thresholds[label] = best
+#         self.thresholds = thresholds
+
+#     def internal_predict(self, X_test):
+#         preds = self.model.predict_proba(X_test)  
+#         preds_return = np.full(len(preds), -1)
+#         for i in range(len(preds)):
+#             above_thresh = preds[i] >= self.thresholds
+#             if not np.any(above_thresh):
+#                 continue
+#             else:
+#                 max_prob = np.max(preds[i], axis=1)               
+#                 predicted_label = above_thresh[np.argmax(preds[i], axis=1)]
+#                 preds_return[i] =predicted_label
+
+#         return preds_return
+    
+
+    
+#     def predict_x_val(self, X_test,y_test,cv=10):
+#         cvscore=cross_val_score(self.model,X_test,y_test,cv)
+#         return cvscore 
+
+    
+class ClassSpecificThresholdsCautiousClassifier(CautiousClassifier):
+    """
+    This class is implemented based on ideas and code from the below source. 
+    Reference:
+    https://dmip.webs.upv.es/ROCAI2004/papers/04-ROCAI2004-Ferri-HdezOrallo.pdf
+    """
+    def __init__(self, X, y):
+        self.data = X
+        self.labels = y
+
+    def gridSearch(self):
+        clf = RF(random_state=0)
+        param_grid = {
+            'n_estimators': [50, 100, 200],
+            'max_depth': [None, 10, 20, 30],
+            'max_features': ['sqrt', 'log2', None],
+            'min_samples_split': [2, 5, 10],
+            'min_samples_leaf': [1, 2, 4]
+        }
+        grid_search = GridSearchCV(estimator=clf, param_grid=param_grid, cv=5, scoring='accuracy', verbose=2)
+        grid_search.fit(self.data, self.labels)
+        return grid_search.best_params_
+
+    def fit(self, best_params):
+        self.model = RF(**best_params, random_state=0)
+        self.model.fit(self.data, self.labels)
+
+    def internal_eval(self, thresh, preds_proba, y_calib):
+            y_pred = self._internal_predict(preds_proba, thresh)
+            # count = (y_pred != -1)
+            imprecise_predictions = y_pred
+            indeterminate_instance = (imprecise_predictions == -1)
+            determinate_instance = (imprecise_predictions != -1)
+            single_set_length = len(y_calib) - sum(indeterminate_instance)
+            determinacy = single_set_length/len(y_calib)
+            determinacy = round(determinacy*100, 2)
+            single_set_accuracy = sum(y_calib[determinate_instance]==imprecise_predictions[determinate_instance])/single_set_length
+            single_set_accuracy = round(single_set_accuracy*100, 2)
+            u65_score = round(65 + (single_set_accuracy - 65)*determinacy/100, 2)
+            return u65_score
+
+
+    def fit_class_thresholds(self, X_calib, y_calib, search_grid=np.linspace(0.0, 1.0, 11)):
+        preds_proba = self.model.predict_proba(X_calib)
+        thresholds = np.full(2, 0.5)
+
+        for label in range(2):
+            best_thresh = thresholds[label]
+            best_score = self.internal_eval(thresholds, preds_proba, y_calib)
+            for candidate_threshold in search_grid:
+                test_thresh = thresholds.copy()
+                test_thresh[label] = candidate_threshold
+                score = self.internal_eval(test_thresh, preds_proba, y_calib)
+                if score > best_score:
+                    best_score = score
+                    best_thresh = candidate_threshold
+            thresholds[label] = best_thresh
+
+        self.class_thresholds = thresholds
+
+    def predict(self, X_test):
+        preds = self.model.predict_proba(X_test)
+        return self._internal_predict(preds, self.class_thresholds)
+
+    def _internal_predict(self, preds, thresh):
+        predictions = []
+        for p in preds:
+            qualified = p >= thresh
+            if not np.any(qualified):
+                predictions.append(-1)
+            else:
+                ratios = p[qualified] / thresh[qualified]
+                qualified_classes = np.where(qualified)[0]
+                chosen_class = qualified_classes[np.argmax(ratios)]
+                predictions.append(chosen_class)
+        return np.array(predictions)
+
+    def predict_x_val(self, X_test, y_test, cv=10):
+        cvscore = cross_val_score(self.model, X_test, y_test, cv=cv)
+        return cvscore
+
 
 class ConformalPredictor(CautiousClassifier, ):
     """
