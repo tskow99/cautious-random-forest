@@ -7,9 +7,11 @@ This repository explores methods for implementing cautiousness in Random Forest 
 This project was developed in fufillment of EN.675 Final Project assignment, completed by @tskow99, @davfeldm17 and @jehuddleston. 
 
 # Getting started
+N.B we require `conda` and `jupyter notebook` to run our code.
+
 Clone the repository
 
-`git clone git@github.com:tskow99/cautious-random-forest.git`
+`git clone git@github.com:tskow99/cautious-random-forest.git` or `git clone https://github.com/tskow99/cautious-random-forest.git`
 
 Install dependencies
 
@@ -18,6 +20,10 @@ Install dependencies
 `conda activate crf`
 
 `pip install -r requirements.txt`
+
+Launch the jupyter notebook
+
+`jupyter notebook`
 
 ## Code Layout
 
