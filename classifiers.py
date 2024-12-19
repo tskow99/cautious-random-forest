@@ -305,17 +305,15 @@ class ConformalPredictor(CautiousClassifier, ):
         self.model = RF(**best_params, random_state=0)
         self.model.fit(X_train, y_train)
         self.classes = self.model.classes_
-        self.class_to_index = {c: i for i, c in enumerate(self.classes)}
         prob_calib = self.model.predict_proba(X_calib)
-        self.calibration_scores_by_class = {c: [] for c in self.classes}
+        self.calib_scores_by_class = {c: [] for c in self.classes}
 
         for i, true_class in enumerate(y_calib):
-            class_idx = self.class_to_index[true_class]
-            nonconformity_score = 1 - prob_calib[i, class_idx]
-            self.calibration_scores_by_class[true_class].append(nonconformity_score)
+            nonconformity_score = 1 - prob_calib[i, int(true_class)]
+            self.calib_scores_by_class[true_class].append(nonconformity_score)
 
         for c in self.classes:
-            self.calibration_scores_by_class[c] = np.sort(self.calibration_scores_by_class[c])
+            self.calib_scores_by_class[c] = np.sort(self.calib_scores_by_class[c])
 
         return self
 
@@ -324,20 +322,20 @@ class ConformalPredictor(CautiousClassifier, ):
         return 1 - prob[:, class_idx]
 
     def predict_proba(self, X):
-        n_test = X.shape[0]
-        p_values = np.zeros((n_test, len(self.classes)))
+        n_test_samples = len(X)
+        pvals = np.zeros((n_test_samples, len(self.classes)))
 
         for j, c in enumerate(self.classes):
             test_scores = self._nonconformity_score_for_class(X, j)
-            sorted_scores = self.calibration_scores_by_class[c]
-            N_j = len(sorted_scores)
+            sorted_scores = self.calib_scores_by_class[c]
+            sorted_scores_len = len(sorted_scores)
 
             for i, score in enumerate(test_scores):
-                idx = bisect.bisect_left(sorted_scores, score)
-                count = N_j - idx
-                p_values[i, j] = (count + 1) / (N_j + 1) if N_j > 0 else 1.0
+                index = bisect.bisect_left(sorted_scores, score)
+                count = sorted_scores_len - index
+                pvals[i, j] = (count + 1) / (sorted_scores_len + 1) if sorted_scores_len > 0 else 1.0
 
-        return p_values
+        return pvals
 
     def predict(self, X, alpha=0.05):
         p_values = self.predict_proba(X)
