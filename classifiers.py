@@ -304,20 +304,13 @@ class ConformalPredictor(CautiousClassifier, ):
     def fit(self,best_params, X_train, y_train, X_calib, y_calib):
         self.model = RF(**best_params, random_state=0)
         self.model.fit(X_train, y_train)
-
-        # Store class information
         self.classes = self.model.classes_
         self.class_to_index = {c: i for i, c in enumerate(self.classes)}
-
-        # calibration nonconformity scores
-        # for each sample:
-        # nonconformity_score = 1 - p(correct_class|x_calib)
         prob_calib = self.model.predict_proba(X_calib)
         self.calibration_scores_by_class = {c: [] for c in self.classes}
 
         for i, true_class in enumerate(y_calib):
             class_idx = self.class_to_index[true_class]
-            # nonconformity score for this instance is 1 - probability of the true class
             nonconformity_score = 1 - prob_calib[i, class_idx]
             self.calibration_scores_by_class[true_class].append(nonconformity_score)
 
@@ -331,9 +324,6 @@ class ConformalPredictor(CautiousClassifier, ):
         return 1 - prob[:, class_idx]
 
     def predict_proba(self, X):
-        # compute the conformal p-values for each class
-        # for a given test point, p-value for class c_j is:
-
         n_test = X.shape[0]
         p_values = np.zeros((n_test, len(self.classes)))
 
@@ -342,8 +332,6 @@ class ConformalPredictor(CautiousClassifier, ):
             sorted_scores = self.calibration_scores_by_class[c]
             N_j = len(sorted_scores)
 
-            # for each test sample, count num calibration scores are >= test_score
-            # p-value = (count + 1)/(N_j + 1)
             for i, score in enumerate(test_scores):
                 idx = bisect.bisect_left(sorted_scores, score)
                 count = N_j - idx
@@ -352,9 +340,7 @@ class ConformalPredictor(CautiousClassifier, ):
         return p_values
 
     def predict(self, X, alpha=0.05):
-        # get conformal set of classes whose p-value > alpha
         p_values = self.predict_proba(X)
-        # thresh at alpha to get sets of classes
         conformal_sets = (p_values > alpha).astype(int)
         mlb = MultiLabelBinarizer(classes=self.classes)
         mlb.fit([self.classes])
