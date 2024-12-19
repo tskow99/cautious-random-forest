@@ -25,6 +25,8 @@ Launch the jupyter notebook
 
 `jupyter notebook`
 
+Please note, when running the notebook, you do not need to run cell 5 unless you want to run grid search for hyper-paramters. Hyper-parameters for each model are stored in config files in `configs` so you can skip straight to cell 6 which will be much faster. You do not need to run both cell 5 and 6. 
+
 ## Code Layout
 
 To validate the results from our report, run `results.ipynb`. The notebook will fit each of our classifiers to each of our datasets and run evaluation on all classifiers. Note that one section, the first cell under `Fit Models` will take a few hours to run but is not necessary to replicate our results.
